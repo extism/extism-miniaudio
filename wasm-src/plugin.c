@@ -1,7 +1,8 @@
-#include "extism-pdk.h"
-
 #include <stdio.h>
 #include <string.h>
+
+#include "miniaudio.h"
+#include "extism-pdk.h"
 
 int32_t count_vowels()
 {
@@ -24,5 +25,24 @@ int32_t count_vowels()
   extism_store(offs_, (const uint8_t *)out, n);
   extism_output_set(offs_, n);
 
+  return 0;
+}
+
+int32_t download_audio()
+{
+  const char *reqStr = "{\
+    \"method\": \"GET\",\
+    \"url\": \"https://jsonplaceholder.typicode.com/todos/1\"\
+  }";
+
+  ExtismPointer req = extism_alloc_string(reqStr, strlen(reqStr));
+  ExtismPointer res = extism_http_request(req, 0);
+
+  if (extism_http_status_code() != 200)
+  {
+    return -1;
+  }
+
+  extism_output_set(res, extism_length(res));
   return 0;
 }

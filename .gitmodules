@@ -4,3 +4,6 @@
 [submodule "third_party/extism-pdk"]
 	path = third_party/extism-pdk
 	url = https://github.com/extism/c-pdk
+[submodule "third_party/miniaudio"]
+	path = third_party/miniaudio
+	url = https://github.com/mackron/miniaudio
