@@ -1,6 +1,6 @@
 ## Setup
 ```bash
-cmake build
+cmake -B build
 cd build
 make -j8
 ./extism-miniaudio-example
