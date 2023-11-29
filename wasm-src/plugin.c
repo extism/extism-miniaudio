@@ -4,7 +4,8 @@
 #include "miniaudio.h"
 #include "extism-pdk.h"
 
-int32_t count_vowels()
+EXTISM_EXPORT_AS("count_vowels")
+int32_t count_vowels(void)
 {
   uint64_t count = 0;
   uint8_t ch = 0;
@@ -28,7 +29,7 @@ int32_t count_vowels()
   return 0;
 }
 
-int32_t download_audio()
+int32_t EXTISM_EXPORTED_FUNCTION(download_audio)(void)
 {
   const char *reqStr = "{\
     \"method\": \"GET\",\
