@@ -21,6 +21,7 @@ else()
   endif()
 endif()
 add_executable(extism-miniaudio-example src/main.cpp)
+target_include_directories(extism-miniaudio-example PRIVATE third_party/miniaudio)
 target_link_libraries(extism-miniaudio-example extism-cpp)
 
 add_subdirectory(wasm-src)
