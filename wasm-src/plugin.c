@@ -29,7 +29,7 @@ int32_t count_vowels(void)
   return 0;
 }
 
-int32_t EXTISM_EXPORTED_FUNCTION(download_audio)(void)
+int32_t EXTISM_EXPORTED_FUNCTION(download_audio)
 {
   const char *reqStr = "{\
     \"method\": \"GET\",\
