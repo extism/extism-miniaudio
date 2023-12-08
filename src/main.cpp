@@ -49,7 +49,9 @@ int main(int argc, char *argv[])
     //     return 1;
     // }
     ma_engine engine;
-    if (MA_SUCCESS != ma_engine_init(NULL, &engine))
+    ma_engine_config config = ma_engine_config_init();
+    config.periodSizeInFrames = 512;
+    if (MA_SUCCESS != ma_engine_init(&config, &engine))
     {
         std::cerr << "error initializing engine" << std::endl;
         return 1;

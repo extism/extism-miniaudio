@@ -60,6 +60,7 @@ static ma_format Format;
 static uint32_t Channels;
 static uint32_t SampleRate;
 static void *POutData;
+static size_t OldSize;
 
 static ma_decoder_config DecC;
 
@@ -78,7 +79,7 @@ int32_t EXTISM_EXPORTED_FUNCTION(decoder_extism_init_memory)
     return -1;
   }
   extism_load_input((uint8_t *)PData, dataSize);
-  DecC = ma_decoder_config_init(ma_format_s16, 2, 44100);
+  DecC = ma_decoder_config_init(ma_format_unknown, 0, 0);
   if ((MA_SUCCESS != ma_decoder_init_memory(PData, dataSize, &DecC, &Decoder)) || (MA_SUCCESS != ma_decoder_get_data_format(&Decoder, &Format, &Channels, &SampleRate, NULL, 0)))
   {
     free(PData);
@@ -101,6 +102,7 @@ int32_t EXTISM_EXPORTED_FUNCTION(decoder_extism_uninit)
   {
     free(POutData);
     POutData = NULL;
+    OldSize = 0;
   }
   if (MA_SUCCESS != result)
   {
@@ -113,12 +115,16 @@ int32_t EXTISM_EXPORTED_FUNCTION(decoder_extism_read_pcm_frames)
 {
   const uint64_t frameCount = extism_input_load_u64(0);
   const size_t outputSize = frameCount * Channels * ma_get_bytes_per_sample(Format);
-  void *newOutData = realloc(POutData, outputSize);
-  if (!newOutData)
+  if (outputSize > OldSize)
   {
-    return -1;
+    void *newOutData = realloc(POutData, outputSize);
+    if (!newOutData)
+    {
+      return -1;
+    }
+    POutData = newOutData;
+    OldSize = outputSize;
   }
-  POutData = newOutData;
   uint64_t framesRead;
   if (MA_SUCCESS != ma_decoder_read_pcm_frames(&Decoder, POutData, frameCount, &framesRead))
   {

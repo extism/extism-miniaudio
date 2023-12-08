@@ -195,8 +195,10 @@ MA_API void ma_decoder_extism_uninit(ma_decoder_extism *pExtism, const ma_alloca
      (P)[6] = (0x00FF000000000000 & (V)) >> 060, \
      (P)[7] = (0xFF00000000000000 & (V)) >> 070, (P) + 8)
 
+#include <chrono>
 MA_API ma_result ma_decoder_extism_read_pcm_frames(ma_decoder_extism *pExtism, void *pFramesOut, ma_uint64 frameCount, ma_uint64 *pFramesRead)
 {
+    const auto start{std::chrono::steady_clock::now()};
     if (pFramesRead != NULL)
     {
         *pFramesRead = 0;
@@ -215,8 +217,16 @@ MA_API ma_result ma_decoder_extism_read_pcm_frames(ma_decoder_extism *pExtism, v
     WRITE64LE(frameCountBuf, frameCount);
     extism::Buffer out = pExtism->plugin->call("decoder_extism_read_pcm_frames", frameCountBuf, sizeof(frameCountBuf));
     memcpy(pFramesOut, out.data, out.length);
-
     *pFramesRead = out.length / (pExtism->channels * ma_get_bytes_per_sample(pExtism->format));
+
+    const auto end{std::chrono::steady_clock::now()};
+    const std::chrono::duration<double> elapsed_seconds{end - start};
+    const double acceptable_time = (double)frameCount / pExtism->sampleRate;
+    const double delta = elapsed_seconds.count() - acceptable_time;
+    if (delta > 0)
+    {
+        std::cerr << "too long by " << delta << " acceptable " << acceptable_time << " frameCount " << frameCount << std::endl;
+    }
 
     return MA_SUCCESS;
 }
@@ -227,9 +237,6 @@ MA_API ma_result ma_decoder_extism_seek_to_pcm_frame(ma_decoder_extism *pExtism,
     {
         return MA_INVALID_ARGS;
     }
-
-    /* Should never hit this since initialization would have failed. */
-    MA_ASSERT(MA_FALSE);
 
     (void)frameIndex;
 
