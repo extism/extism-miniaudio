@@ -3,7 +3,7 @@
 #include "extism.hpp"
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
-
+#include "miniaudio_decoder_extism.h"
 static const std::optional<extism::Buffer> download_audio(extism::Plugin &plugin, std::string src)
 {
     try
@@ -35,12 +35,19 @@ int main(int argc, char *argv[])
         return 1;
     }
     const extism::Buffer &buf = *maybeBuf;
-    ma_decoder decoder;
-    if (MA_SUCCESS != ma_decoder_init_memory(buf.data, buf.length, NULL, &decoder))
+
+    ma_decoder_extism decoder_extism;
+    if (MA_SUCCESS != ma_decoder_extism_init_memory(buf.data, buf.length, NULL, NULL, &decoder_extism))
     {
-        std::cerr << "error initializing decoder" << std::endl;
+        std::cerr << "error initializing decoder extism" << std::endl;
         return 1;
     }
+    // ma_decoder decoder;
+    // if (MA_SUCCESS != ma_decoder_init_memory(buf.data, buf.length, NULL, &decoder))
+    //{
+    //     std::cerr << "error initializing decoder" << std::endl;
+    //     return 1;
+    // }
     ma_engine engine;
     if (MA_SUCCESS != ma_engine_init(NULL, &engine))
     {
@@ -53,7 +60,7 @@ int main(int argc, char *argv[])
         return 1;
     }
     ma_sound sound;
-    if (MA_SUCCESS != ma_sound_init_from_data_source(&engine, &decoder, 0, NULL, &sound))
+    if (MA_SUCCESS != ma_sound_init_from_data_source(&engine, &decoder_extism, 0, NULL, &sound))
     {
         std::cerr << "error initializing sound" << std::endl;
         return 1;
@@ -68,5 +75,6 @@ int main(int argc, char *argv[])
     }
     ma_sound_uninit(&sound);
     ma_engine_uninit(&engine);
-    ma_decoder_uninit(&decoder);
+    // ma_decoder_uninit(&decoder);
+    ma_decoder_extism_uninit(&decoder_extism, NULL);
 }

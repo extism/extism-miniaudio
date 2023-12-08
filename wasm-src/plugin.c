@@ -3,7 +3,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-
+#define MINIAUDIO_IMPLEMENTATION
+#define MA_NO_DEVICE_IO
+#define MA_NO_THREADING
+#define MA_NO_ENCODING
+#define MA_NO_RUNTIME_LINKING
+#define DR_FLAC_BUFFER_SIZE 65536
 #include "miniaudio.h"
 #include "extism-pdk.h"
 
@@ -46,5 +51,80 @@ int32_t EXTISM_EXPORTED_FUNCTION(download_audio)
     return -1;
   }
   extism_output_set(res, extism_length(res));
+  return 0;
+}
+
+static ma_decoder Decoder;
+static void *PData;
+static ma_format Format;
+static uint32_t Channels;
+static uint32_t SampleRate;
+static void *POutData;
+
+static ma_decoder_config DecC;
+
+#define WRITE32LE(P, V)                        \
+  ((P)[0] = (0x00000000000000FF & (V)) >> 000, \
+   (P)[1] = (0x000000000000FF00 & (V)) >> 010, \
+   (P)[2] = (0x0000000000FF0000 & (V)) >> 020, \
+   (P)[3] = (0x00000000FF000000 & (V)) >> 030, (P) + 4)
+
+int32_t EXTISM_EXPORTED_FUNCTION(decoder_extism_init_memory)
+{
+  size_t dataSize = extism_input_length();
+  PData = malloc(dataSize);
+  if (!PData)
+  {
+    return -1;
+  }
+  extism_load_input((uint8_t *)PData, dataSize);
+  DecC = ma_decoder_config_init(ma_format_s16, 2, 44100);
+  if ((MA_SUCCESS != ma_decoder_init_memory(PData, dataSize, &DecC, &Decoder)) || (MA_SUCCESS != ma_decoder_get_data_format(&Decoder, &Format, &Channels, &SampleRate, NULL, 0)))
+  {
+    free(PData);
+    return -1;
+  }
+  uint8_t outputConfig[12];
+  WRITE32LE(outputConfig, Format);
+  WRITE32LE(&outputConfig[4], Channels);
+  WRITE32LE(&outputConfig[8], SampleRate);
+  ExtismPointer ep = extism_alloc_string((const char *)outputConfig, sizeof(outputConfig));
+  extism_output_set(ep, sizeof(outputConfig));
+  return 0;
+}
+
+int32_t EXTISM_EXPORTED_FUNCTION(decoder_extism_uninit)
+{
+  const ma_result result = ma_decoder_uninit(&Decoder);
+  free(PData);
+  if (POutData)
+  {
+    free(POutData);
+    POutData = NULL;
+  }
+  if (MA_SUCCESS != result)
+  {
+    return -1;
+  }
+  return 0;
+}
+
+int32_t EXTISM_EXPORTED_FUNCTION(decoder_extism_read_pcm_frames)
+{
+  const uint64_t frameCount = extism_input_load_u64(0);
+  const size_t outputSize = frameCount * Channels * ma_get_bytes_per_sample(Format);
+  void *newOutData = realloc(POutData, outputSize);
+  if (!newOutData)
+  {
+    return -1;
+  }
+  POutData = newOutData;
+  uint64_t framesRead;
+  if (MA_SUCCESS != ma_decoder_read_pcm_frames(&Decoder, POutData, frameCount, &framesRead))
+  {
+    return -1;
+  }
+  ExtismPointer ep = extism_alloc_string((const char *)POutData, outputSize);
+  extism_output_set(ep, outputSize);
   return 0;
 }
