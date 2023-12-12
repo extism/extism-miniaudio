@@ -163,8 +163,7 @@ MA_API ma_result ma_decoder_extism_init_memory(const void *pData, size_t dataSiz
     pExtism->format = (ma_format)READ32LE(buf.data);
     pExtism->channels = READ32LE(buf.data + 4);
     pExtism->sampleRate = READ32LE(buf.data + 8);
-    std::cout << pExtism->format << " " << pExtism->channels << " " << pExtism->sampleRate << std::endl;
-    pExtism->plugin->call("decoder_extism_nop");
+    extism_plugin_reset(pExtism->plugin->plugin);
     return MA_SUCCESS;
 }
 
@@ -227,6 +226,11 @@ MA_API ma_result ma_decoder_extism_read_pcm_frames(ma_decoder_extism *pExtism, v
     if (delta > 0)
     {
         std::cerr << "too long by " << delta << " acceptable " << acceptable_time << " frameCount " << frameCount << std::endl;
+    }
+
+    if (*pFramesRead == 0)
+    {
+        return MA_AT_END;
     }
 
     return MA_SUCCESS;

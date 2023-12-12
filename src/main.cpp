@@ -1,3 +1,5 @@
+
+#include <fstream>
 #include <iostream>
 #include <optional>
 #include "extism.hpp"
@@ -17,6 +19,24 @@ static const std::optional<extism::Buffer> download_audio(extism::Plugin &plugin
     }
 }
 
+static std::vector<uint8_t> readFile(const std::string &filename)
+{
+    struct stat st;
+    if (stat(filename.c_str(), &st) == -1)
+    {
+        throw std::runtime_error("error stat-ing file");
+    }
+    auto inSize = st.st_size;
+    std::vector<uint8_t> buf(inSize);
+    std::ifstream f(filename, std::ios::binary);
+    f.read(reinterpret_cast<char *>(buf.data()), inSize);
+    if (f.gcount() != inSize)
+    {
+        throw std::runtime_error("failed to read");
+    }
+    return buf;
+}
+
 int main(int argc, char *argv[])
 {
     if (argc < 3)
@@ -28,13 +48,15 @@ int main(int argc, char *argv[])
     extism::Manifest manifest = extism::Manifest::wasmPath(code);
     manifest.allowHost(argv[2]);
     extism::Plugin plugin(manifest, true);
-    const auto maybeBuf = download_audio(plugin, argv[1]);
-    if (!maybeBuf)
-    {
-        std::cerr << "Failed to download audio!" << std::endl;
-        return 1;
-    }
-    const extism::Buffer &buf = *maybeBuf;
+    auto tempBuf = readFile(argv[1]);
+    const extism::Buffer buf(tempBuf.data(), tempBuf.size());
+    // const auto maybeBuf = download_audio(plugin, argv[1]);
+    // if (!maybeBuf)
+    //{
+    //     std::cerr << "Failed to download audio!" << std::endl;
+    //     return 1;
+    // }
+    // const extism::Buffer &buf = *maybeBuf;
 
     ma_decoder_extism decoder_extism;
     if (MA_SUCCESS != ma_decoder_extism_init_memory(buf.data, buf.length, NULL, NULL, &decoder_extism))

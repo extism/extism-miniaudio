@@ -123,9 +123,15 @@ int32_t EXTISM_EXPORTED_FUNCTION(decoder_extism_read_pcm_frames)
     POutData = newOutData;
     OldSize = outputSize;
   }
+  ma_result result;
   uint64_t framesRead;
-  if (MA_SUCCESS != ma_decoder_read_pcm_frames(&Decoder, POutData, frameCount, &framesRead))
+  result = ma_decoder_read_pcm_frames(&Decoder, POutData, frameCount, &framesRead);
+  if (result != MA_SUCCESS)
   {
+    if (result == MA_AT_END)
+    {
+      return 0;
+    }
     return -1;
   }
   const uint64_t realOutputSize = framesRead * Channels * ma_get_bytes_per_sample(Format);
