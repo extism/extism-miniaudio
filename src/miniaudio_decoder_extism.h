@@ -164,6 +164,7 @@ MA_API ma_result ma_decoder_extism_init_memory(const void *pData, size_t dataSiz
     pExtism->channels = READ32LE(buf.data + 4);
     pExtism->sampleRate = READ32LE(buf.data + 8);
     std::cout << pExtism->format << " " << pExtism->channels << " " << pExtism->sampleRate << std::endl;
+    pExtism->plugin->call("decoder_extism_nop");
     return MA_SUCCESS;
 }
 

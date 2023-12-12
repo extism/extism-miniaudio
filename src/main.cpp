@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
     }
     while (!ma_sound_at_end(&sound))
     {
+        sleep(1);
     }
     ma_sound_uninit(&sound);
     ma_engine_uninit(&engine);
