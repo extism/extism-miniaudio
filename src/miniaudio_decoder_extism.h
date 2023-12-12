@@ -43,6 +43,7 @@ extern "C"
 #endif
 
 #if defined(MINIAUDIO_IMPLEMENTATION) || defined(MA_IMPLEMENTATION)
+#include "miniaudio_decoder_extism_wasm.h"
 
 static ma_result ma_decoder_extism_ds_read(ma_data_source *pDataSource, void *pFramesOut, ma_uint64 frameCount, ma_uint64 *pFramesRead)
 {
@@ -98,7 +99,8 @@ static ma_result ma_decoder_extism_init_internal(const ma_decoding_backend_confi
         return result; /* Failed to initialize the base data source. */
     }
 
-    pExtism->plugin = new extism::Plugin(extism::Manifest::wasmPath("wasm-src/plugin.wasm"), true);
+    // pExtism->plugin = new extism::Plugin(extism::Manifest::wasmPath("wasm-src/plugin.wasm"), true);
+    pExtism->plugin = new extism::Plugin(plugin_wasm, sizeof(plugin_wasm), true);
     return MA_SUCCESS;
 }
 

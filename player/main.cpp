@@ -6,6 +6,7 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
 #include "miniaudio_decoder_extism.h"
+#include "downloader.h"
 static const std::optional<extism::Buffer> download_audio(extism::Plugin &plugin, std::string src)
 {
     try
@@ -44,10 +45,10 @@ int main(int argc, char *argv[])
         std::cerr << "A URL to an audio file and an allowed host must be provided!" << std::endl;
         return 1;
     }
-    const std::string code("wasm-src/plugin.wasm");
-    extism::Manifest manifest = extism::Manifest::wasmPath(code);
-    manifest.allowHost(argv[2]);
-    extism::Plugin plugin(manifest, true);
+    // const std::string code("wasm-src/plugin.wasm");
+    // extism::Manifest manifest = extism::Manifest::wasmPath(code);
+    // manifest.allowHost(argv[2]);
+    // extism::Plugin plugin(manifest, true);
     auto tempBuf = readFile(argv[1]);
     const extism::Buffer buf(tempBuf.data(), tempBuf.size());
     // const auto maybeBuf = download_audio(plugin, argv[1]);

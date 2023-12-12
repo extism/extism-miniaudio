@@ -1,0 +1,6 @@
+add_executable(downloader downloader.c)
+target_include_directories(downloader PRIVATE ../../third_party/extism-pdk)
+set(CMAKE_C_COMPILER "$ENV{WASI_SDK_PATH}/bin/clang")
+set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
+target_compile_options(downloader PRIVATE -O2 -g)
+target_link_options(downloader PRIVATE -mexec-model=reactor)
