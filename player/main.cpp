@@ -6,7 +6,7 @@
 #include "extism.hpp"
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
-#include "miniaudio_decoder_extism.h"
+#include "miniaudio_decoder_extism.hpp"
 
 static const std::optional<extism::Buffer> download_audio(extism::Plugin &plugin, std::string src)
 {

@@ -31,7 +31,7 @@ add_custom_command(
 )
 
 # Declare the library, only headers
-add_library(extism-miniaudio INTERFACE src/miniaudio_decoder_extism.h ${CMAKE_CURRENT_BINARY_DIR}/miniaudio_decoder_extism_wasm.h)
+add_library(extism-miniaudio INTERFACE src/miniaudio_decoder_extism.hpp ${CMAKE_CURRENT_BINARY_DIR}/miniaudio_decoder_extism_wasm.h)
 target_include_directories(extism-miniaudio INTERFACE third_party/miniaudio src ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(extism-miniaudio INTERFACE extism-cpp)
 
