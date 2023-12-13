@@ -16,11 +16,17 @@ Install libextism and cpp-sdk as described in: [cpp-sdk building-and-installatio
 
 ```bash
 git clone https://github.com/extism/extism-miniaudio
+cd extism-miniaudio
 git submodule update --init third_party/extism-pdk
 git submodule update --init third_party/miniaudio
-cd extism-miniaudio
 cmake -B build -DEXTISM_CPP_BUILD_IN_TREE=OFF
 ```
+
+## Wasm Setup: Setup WASI-SDK
+
+https://github.com/WebAssembly/wasi-sdk
+
+Make sure `WASI_SDK_PATH` is set in your environment.
 
 ## Build
 
@@ -32,14 +38,14 @@ cmake --build build
 
 ```bash
 cd build
-./extism-miniaudio-example <path_to_song>
+./extism-miniaudio-player <path_to_song>
 ```
 
 or
 
 ```bash
 cd build
-./extism-miniaudio-example <url_to_song> <host_to_allow>
+./extism-miniaudio-player <url_to_song> <host_to_allow>
 ```
 
 ## Using `miniaudio_decoder_extism` in your projects
