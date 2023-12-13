@@ -59,6 +59,12 @@ extern "C"
      (uint64_t)(255 & (S)[3]) << 030 | (uint64_t)(255 & (S)[2]) << 020 | \
      (uint64_t)(255 & (S)[1]) << 010 | (uint64_t)(255 & (S)[0]) << 000)
 
+#define WRITE32LE(P, V)                          \
+    ((P)[0] = (0x00000000000000FF & (V)) >> 000, \
+     (P)[1] = (0x000000000000FF00 & (V)) >> 010, \
+     (P)[2] = (0x0000000000FF0000 & (V)) >> 020, \
+     (P)[3] = (0x00000000FF000000 & (V)) >> 030, (P) + 4)
+
 #define WRITE64LE(P, V)                          \
     ((P)[0] = (0x00000000000000FF & (V)) >> 000, \
      (P)[1] = (0x000000000000FF00 & (V)) >> 010, \
@@ -124,6 +130,16 @@ static ma_result ma_decoder_extism_init_internal(const ma_decoding_backend_confi
     }
 
     pExtism->plugin = new extism::Plugin(plugin_wasm, sizeof(plugin_wasm), true);
+    if (pConfig != NULL)
+    {
+        uint8_t input[8];
+        static_assert(sizeof(input) == sizeof(*pConfig));
+        static_assert(sizeof(pConfig->preferredFormat == 4));
+        static_assert(sizeof(pConfig->seekPointCount == 4));
+        WRITE32LE(input, pConfig->preferredFormat);
+        WRITE32LE(&input[4], pConfig->seekPointCount);
+        pExtism->plugin->call("decoder_extism_init_internal", input, sizeof(input));
+    }
     return MA_SUCCESS;
 }
 

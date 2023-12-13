@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #define MINIAUDIO_IMPLEMENTATION
@@ -24,6 +25,8 @@
    (P)[6] = (0x00FF000000000000 & (V)) >> 060, \
    (P)[7] = (0xFF00000000000000 & (V)) >> 070, (P) + 8)
 
+static bool HasConfig = false;
+static ma_decoding_backend_config Config;
 static ma_decoder Decoder;
 static void *PData;
 static ma_format Format;
@@ -31,6 +34,17 @@ static uint32_t Channels;
 static uint32_t SampleRate;
 static void *POutData;
 static size_t OldSize;
+
+int32_t EXTISM_EXPORTED_FUNCTION(decoder_extism_init_internal)
+{
+  if (extism_input_length() != sizeof(ma_decoding_backend_config))
+  {
+    return -1;
+  }
+  HasConfig = true;
+  extism_load_input((uint8_t *)&Config, extism_input_length());
+  return 0;
+}
 
 int32_t EXTISM_EXPORTED_FUNCTION(decoder_extism_init_memory)
 {
@@ -41,7 +55,12 @@ int32_t EXTISM_EXPORTED_FUNCTION(decoder_extism_init_memory)
     return -1;
   }
   extism_load_input((uint8_t *)PData, dataSize);
-  ma_decoder_config decC = ma_decoder_config_init(ma_format_s16, 0, 0);
+  ma_decoder_config decC = ma_decoder_config_init_default();
+  if (HasConfig)
+  {
+    decC.format = Config.preferredFormat;
+    decC.seekPointCount = Config.seekPointCount;
+  }
   if ((MA_SUCCESS != ma_decoder_init_memory(PData, dataSize, &decC, &Decoder)) || (MA_SUCCESS != ma_decoder_get_data_format(&Decoder, &Format, &Channels, &SampleRate, NULL, 0)))
   {
     free(PData);
@@ -58,6 +77,7 @@ int32_t EXTISM_EXPORTED_FUNCTION(decoder_extism_init_memory)
 
 int32_t EXTISM_EXPORTED_FUNCTION(decoder_extism_uninit)
 {
+  HasConfig = false;
   const ma_result result = ma_decoder_uninit(&Decoder);
   free(PData);
   if (POutData)

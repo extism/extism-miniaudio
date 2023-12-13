@@ -49,15 +49,17 @@ int main(int argc, char *argv[])
     }
     else if (argc == 3)
     {
-        extism::Manifest manifest = extism::Manifest::wasmPath("wasm-src/plugin.wasm");
+        extism::Manifest manifest = extism::Manifest::wasmPath("player/wasm-src/downloader.wasm");
         manifest.allowHost(argv[2]);
         extism::Plugin plugin(manifest, true);
+        std::cout << "Downloading ..." << std::endl;
         auto maybeBuf = download_audio(plugin, argv[1]);
         if (!maybeBuf)
         {
             std::cerr << "Failed to download audio!" << std::endl;
             return 1;
         }
+        std::cout << "Downloading Done" << std::endl;
         buf = (*maybeBuf).vector();
     }
     else
@@ -69,6 +71,7 @@ int main(int argc, char *argv[])
     }
 
     ma_decoder_extism decoder_extism;
+    // ma_decoding_backend_config decoder_backend_config = ma_decoding_backend_config_init(ma_format_s16, 0);
     if (MA_SUCCESS != ma_decoder_extism_init_memory(static_cast<const void *>(buf.data()), buf.size(), NULL, NULL, &decoder_extism))
     {
         std::cerr << "error initializing decoder extism" << std::endl;
@@ -92,9 +95,9 @@ int main(int argc, char *argv[])
     //         return 1;
     //     }
     ma_engine engine;
-    ma_engine_config config = ma_engine_config_init();
-    config.periodSizeInFrames = 512;
-    if (MA_SUCCESS != ma_engine_init(&config, &engine))
+    // ma_engine_config config = ma_engine_config_init();
+    // config.periodSizeInFrames = 512;
+    if (MA_SUCCESS != ma_engine_init(NULL, &engine))
     {
         std::cerr << "error initializing engine" << std::endl;
         return 1;
