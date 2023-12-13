@@ -37,16 +37,17 @@ target_link_libraries(extism-miniaudio INTERFACE extism-cpp)
 
 # build a downloader plugin, convert it to a C header, and turn it into a library
 add_subdirectory(player/wasm-src)
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/player/downloader.h
-  COMMAND xxd -i downloader.wasm ${CMAKE_CURRENT_BINARY_DIR}/player/downloader.h
-  DEPENDS downloader
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/player/wasm-src
-)
-add_library(extism-downloader INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/player/downloader.h)
-target_include_directories(extism-downloader INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/player)
+# commented until we can load a plugin from bytes and a manifest at the same time
+# add_custom_command(
+#   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/player/downloader.h
+#   COMMAND xxd -i downloader.wasm ${CMAKE_CURRENT_BINARY_DIR}/player/downloader.h
+#   DEPENDS downloader
+#   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/player/wasm-src
+# )
+# add_library(extism-downloader INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/player/downloader.h)
+# target_include_directories(extism-downloader INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/player)
 
 # Use the plugins
 add_executable(extism-miniaudio-player player/main.cpp)
 target_include_directories(extism-miniaudio-player PRIVATE third_party/miniaudio)
-target_link_libraries(extism-miniaudio-player PRIVATE extism-cpp extism-miniaudio extism-downloader)
+target_link_libraries(extism-miniaudio-player PRIVATE extism-cpp extism-miniaudio)

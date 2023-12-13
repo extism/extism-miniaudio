@@ -2,11 +2,12 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
+#include <sys/stat.h>
 #include "extism.hpp"
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
 #include "miniaudio_decoder_extism.h"
-#include "downloader.h"
+
 static const std::optional<extism::Buffer> download_audio(extism::Plugin &plugin, std::string src)
 {
     try
@@ -40,27 +41,35 @@ static std::vector<uint8_t> readFile(const std::string &filename)
 
 int main(int argc, char *argv[])
 {
-    if (argc < 3)
+    std::vector<uint8_t> buf;
+    if (argc == 2)
     {
-        std::cerr << "A URL to an audio file and an allowed host must be provided!" << std::endl;
+        auto tempBuf = readFile(argv[1]);
+        buf = std::move(tempBuf);
+    }
+    else if (argc == 3)
+    {
+        extism::Manifest manifest = extism::Manifest::wasmPath("wasm-src/plugin.wasm");
+        manifest.allowHost(argv[2]);
+        extism::Plugin plugin(manifest, true);
+        auto maybeBuf = download_audio(plugin, argv[1]);
+        if (!maybeBuf)
+        {
+            std::cerr << "Failed to download audio!" << std::endl;
+            return 1;
+        }
+        buf = (*maybeBuf).vector();
+    }
+    else
+    {
+        std::cerr << "usage:" << std::endl;
+        std::cerr << argv[0] << " <filename>" << std::endl;
+        std::cerr << argv[0] << " <url> <allowed_hostname>" << std::endl;
         return 1;
     }
-    // const std::string code("wasm-src/plugin.wasm");
-    // extism::Manifest manifest = extism::Manifest::wasmPath(code);
-    // manifest.allowHost(argv[2]);
-    // extism::Plugin plugin(manifest, true);
-    auto tempBuf = readFile(argv[1]);
-    const extism::Buffer buf(tempBuf.data(), tempBuf.size());
-    // const auto maybeBuf = download_audio(plugin, argv[1]);
-    // if (!maybeBuf)
-    //{
-    //     std::cerr << "Failed to download audio!" << std::endl;
-    //     return 1;
-    // }
-    // const extism::Buffer &buf = *maybeBuf;
 
     ma_decoder_extism decoder_extism;
-    if (MA_SUCCESS != ma_decoder_extism_init_memory(buf.data, buf.length, NULL, NULL, &decoder_extism))
+    if (MA_SUCCESS != ma_decoder_extism_init_memory((const void *)buf.data(), buf.size(), NULL, NULL, &decoder_extism))
     {
         std::cerr << "error initializing decoder extism" << std::endl;
         return 1;
