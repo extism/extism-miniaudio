@@ -74,12 +74,23 @@ int main(int argc, char *argv[])
         std::cerr << "error initializing decoder extism" << std::endl;
         return 1;
     }
-    // ma_decoder decoder;
-    // if (MA_SUCCESS != ma_decoder_init_memory(static_cast<const void *>(buf.data()), buf.size(), NULL, &decoder))
+    // ma_uint64 length;
+    // ma_decoder_extism_get_length_in_pcm_frames(&decoder_extism, &length);
+    // std::cout << "length " << length << std::endl;
+    //  if (MA_SUCCESS != ma_decoder_extism_seek_to_pcm_frame(&decoder_extism, 44100 * 60))
     //{
-    //     std::cerr << "error initializing decoder" << std::endl;
-    //     return 1;
-    // }
+    //      std::cerr << "error seeking decoder extism" << std::endl;
+    //      return 1;
+    //  }
+    //  ma_uint64 cursor;
+    //  ma_decoder_extism_get_cursor_in_pcm_frames(&decoder_extism, &cursor);
+    //  std::cout << "cursor " << cursor << std::endl;
+    //     ma_decoder decoder;
+    //     if (MA_SUCCESS != ma_decoder_init_memory(static_cast<const void *>(buf.data()), buf.size(), NULL, &decoder))
+    //{
+    //         std::cerr << "error initializing decoder" << std::endl;
+    //         return 1;
+    //     }
     ma_engine engine;
     ma_engine_config config = ma_engine_config_init();
     config.periodSizeInFrames = 512;

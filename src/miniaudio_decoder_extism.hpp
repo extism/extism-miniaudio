@@ -49,6 +49,26 @@ extern "C"
 #include <iostream>
 #include "miniaudio_decoder_extism_wasm.h"
 
+#define READ32LE(S)                                                      \
+    ((uint32_t)(255 & (S)[3]) << 030 | (uint32_t)(255 & (S)[2]) << 020 | \
+     (uint32_t)(255 & (S)[1]) << 010 | (uint32_t)(255 & (S)[0]) << 000)
+
+#define READ64LE(S)                                                      \
+    ((uint64_t)(255 & (S)[7]) << 070 | (uint64_t)(255 & (S)[6]) << 060 | \
+     (uint64_t)(255 & (S)[5]) << 050 | (uint64_t)(255 & (S)[4]) << 040 | \
+     (uint64_t)(255 & (S)[3]) << 030 | (uint64_t)(255 & (S)[2]) << 020 | \
+     (uint64_t)(255 & (S)[1]) << 010 | (uint64_t)(255 & (S)[0]) << 000)
+
+#define WRITE64LE(P, V)                          \
+    ((P)[0] = (0x00000000000000FF & (V)) >> 000, \
+     (P)[1] = (0x000000000000FF00 & (V)) >> 010, \
+     (P)[2] = (0x0000000000FF0000 & (V)) >> 020, \
+     (P)[3] = (0x00000000FF000000 & (V)) >> 030, \
+     (P)[4] = (0x000000FF00000000 & (V)) >> 040, \
+     (P)[5] = (0x0000FF0000000000 & (V)) >> 050, \
+     (P)[6] = (0x00FF000000000000 & (V)) >> 060, \
+     (P)[7] = (0xFF00000000000000 & (V)) >> 070, (P) + 8)
+
 static ma_result ma_decoder_extism_ds_read(ma_data_source *pDataSource, void *pFramesOut, ma_uint64 frameCount, ma_uint64 *pFramesRead)
 {
     return ma_decoder_extism_read_pcm_frames((ma_decoder_extism *)pDataSource, pFramesOut, frameCount, pFramesRead);
@@ -148,10 +168,6 @@ MA_API ma_result ma_decoder_extism_init_file(const char *pFilePath, const ma_dec
     return MA_NOT_IMPLEMENTED;
 }
 
-#define READ32LE(S)                                                      \
-    ((uint32_t)(255 & (S)[3]) << 030 | (uint32_t)(255 & (S)[2]) << 020 | \
-     (uint32_t)(255 & (S)[1]) << 010 | (uint32_t)(255 & (S)[0]) << 000)
-
 MA_API ma_result ma_decoder_extism_init_memory(const void *pData, size_t dataSize, const ma_decoding_backend_config *pConfig, const ma_allocation_callbacks *pAllocationCallbacks, ma_decoder_extism *pExtism)
 {
     ma_result result;
@@ -189,16 +205,6 @@ MA_API void ma_decoder_extism_uninit(ma_decoder_extism *pExtism, const ma_alloca
 
     ma_data_source_uninit(&pExtism->ds);
 }
-
-#define WRITE64LE(P, V)                          \
-    ((P)[0] = (0x00000000000000FF & (V)) >> 000, \
-     (P)[1] = (0x000000000000FF00 & (V)) >> 010, \
-     (P)[2] = (0x0000000000FF0000 & (V)) >> 020, \
-     (P)[3] = (0x00000000FF000000 & (V)) >> 030, \
-     (P)[4] = (0x000000FF00000000 & (V)) >> 040, \
-     (P)[5] = (0x0000FF0000000000 & (V)) >> 050, \
-     (P)[6] = (0x00FF000000000000 & (V)) >> 060, \
-     (P)[7] = (0xFF00000000000000 & (V)) >> 070, (P) + 8)
 
 MA_API ma_result ma_decoder_extism_read_pcm_frames(ma_decoder_extism *pExtism, void *pFramesOut, ma_uint64 frameCount, ma_uint64 *pFramesRead)
 {
@@ -247,9 +253,10 @@ MA_API ma_result ma_decoder_extism_seek_to_pcm_frame(ma_decoder_extism *pExtism,
         return MA_INVALID_ARGS;
     }
 
-    (void)frameIndex;
-
-    return MA_NOT_IMPLEMENTED;
+    uint8_t frameIndexBuf[8];
+    WRITE64LE(frameIndexBuf, frameIndex);
+    extism::Buffer out = pExtism->plugin->call("decoder_extism_seek_to_pcm_frame", frameIndexBuf, sizeof(frameIndexBuf));
+    return static_cast<ma_result>(READ32LE(out.data));
 }
 
 MA_API ma_result ma_decoder_extism_get_data_format(ma_decoder_extism *pExtism, ma_format *pFormat, ma_uint32 *pChannels, ma_uint32 *pSampleRate, ma_channel *pChannelMap, size_t channelMapCap)
@@ -309,7 +316,9 @@ MA_API ma_result ma_decoder_extism_get_cursor_in_pcm_frames(ma_decoder_extism *p
         return MA_INVALID_ARGS;
     }
 
-    return MA_NOT_IMPLEMENTED;
+    extism::Buffer out = pExtism->plugin->call("decoder_extism_get_cursor_in_pcm_frames");
+    *pCursor = READ64LE(out.data);
+    return MA_SUCCESS;
 }
 
 MA_API ma_result ma_decoder_extism_get_length_in_pcm_frames(ma_decoder_extism *pExtism, ma_uint64 *pLength)
@@ -326,7 +335,9 @@ MA_API ma_result ma_decoder_extism_get_length_in_pcm_frames(ma_decoder_extism *p
         return MA_INVALID_ARGS;
     }
 
-    return MA_NOT_IMPLEMENTED;
+    extism::Buffer out = pExtism->plugin->call("decoder_extism_get_length_in_pcm_frames");
+    *pLength = READ64LE(out.data);
+    return MA_SUCCESS;
 }
 
 #endif
