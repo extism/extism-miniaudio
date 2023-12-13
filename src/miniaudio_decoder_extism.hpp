@@ -9,6 +9,8 @@ You need to include this file after miniaudio.h.
 #ifndef miniaudio_decoder_extism_h
 #define miniaudio_decoder_extism_h
 
+#include "extism.hpp"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -43,6 +45,8 @@ extern "C"
 #endif
 
 #if defined(MINIAUDIO_IMPLEMENTATION) || defined(MA_IMPLEMENTATION)
+#include <chrono>
+#include <iostream>
 #include "miniaudio_decoder_extism_wasm.h"
 
 static ma_result ma_decoder_extism_ds_read(ma_data_source *pDataSource, void *pFramesOut, ma_uint64 frameCount, ma_uint64 *pFramesRead)
@@ -99,7 +103,6 @@ static ma_result ma_decoder_extism_init_internal(const ma_decoding_backend_confi
         return result; /* Failed to initialize the base data source. */
     }
 
-    // pExtism->plugin = new extism::Plugin(extism::Manifest::wasmPath("wasm-src/plugin.wasm"), true);
     pExtism->plugin = new extism::Plugin(plugin_wasm, sizeof(plugin_wasm), true);
     return MA_SUCCESS;
 }
@@ -161,8 +164,8 @@ MA_API ma_result ma_decoder_extism_init_memory(const void *pData, size_t dataSiz
         return result;
     }
 
-    extism::Buffer buf = pExtism->plugin->call("decoder_extism_init_memory", (const uint8_t *)pData, dataSize);
-    pExtism->format = (ma_format)READ32LE(buf.data);
+    extism::Buffer buf = pExtism->plugin->call("decoder_extism_init_memory", static_cast<const uint8_t *>(pData), dataSize);
+    pExtism->format = static_cast<ma_format>(READ32LE(buf.data));
     pExtism->channels = READ32LE(buf.data + 4);
     pExtism->sampleRate = READ32LE(buf.data + 8);
     extism_plugin_reset(pExtism->plugin->plugin);
@@ -197,7 +200,6 @@ MA_API void ma_decoder_extism_uninit(ma_decoder_extism *pExtism, const ma_alloca
      (P)[6] = (0x00FF000000000000 & (V)) >> 060, \
      (P)[7] = (0xFF00000000000000 & (V)) >> 070, (P) + 8)
 
-#include <chrono>
 MA_API ma_result ma_decoder_extism_read_pcm_frames(ma_decoder_extism *pExtism, void *pFramesOut, ma_uint64 frameCount, ma_uint64 *pFramesRead)
 {
     const auto start{std::chrono::steady_clock::now()};

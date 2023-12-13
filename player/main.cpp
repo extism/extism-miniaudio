@@ -69,13 +69,13 @@ int main(int argc, char *argv[])
     }
 
     ma_decoder_extism decoder_extism;
-    if (MA_SUCCESS != ma_decoder_extism_init_memory((const void *)buf.data(), buf.size(), NULL, NULL, &decoder_extism))
+    if (MA_SUCCESS != ma_decoder_extism_init_memory(static_cast<const void *>(buf.data()), buf.size(), NULL, NULL, &decoder_extism))
     {
         std::cerr << "error initializing decoder extism" << std::endl;
         return 1;
     }
     // ma_decoder decoder;
-    // if (MA_SUCCESS != ma_decoder_init_memory(buf.data, buf.length, NULL, &decoder))
+    // if (MA_SUCCESS != ma_decoder_init_memory(static_cast<const void *>(buf.data()), buf.size(), NULL, &decoder))
     //{
     //     std::cerr << "error initializing decoder" << std::endl;
     //     return 1;
