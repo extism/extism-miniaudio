@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#define EXTISM_IMPLEMENTATION
 #include "extism-pdk.h"
 
 static char *extism_input_load_string(void)

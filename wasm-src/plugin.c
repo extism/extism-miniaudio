@@ -7,6 +7,7 @@
 #define MA_NO_ENCODING
 #define MA_NO_RUNTIME_LINKING
 #include "miniaudio.h"
+#define EXTISM_IMPLEMENTATION
 #include "extism-pdk.h"
 
 #define WRITE32LE(P, V)                        \
